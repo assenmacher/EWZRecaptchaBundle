@@ -5,6 +5,7 @@ namespace EWZ\Bundle\RecaptchaBundle\Validator\Constraints;
 use EWZ\Bundle\RecaptchaBundle\Form\Type\EWZRecaptchaV3Type;
 use Psr\Log\LoggerInterface;
 use ReCaptcha\ReCaptcha;
+use ReCaptcha\RequestMethod as ReCaptchaRequestMethod;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\Constraint;
@@ -17,7 +18,17 @@ class IsTrueValidatorV3 extends ConstraintValidator
     private $enabled;
 
     /** @var string */
-    private $secretKey;
+    private $secret;
+
+    /** @var ReCaptchaRequestMethod */
+    private $reCaptchaRequestMethod;
+
+    /**
+     * Recaptcha.
+     *
+     * @var ReCaptcha
+     */
+    protected $recaptcha;
 
     /** @var float */
     private $scoreThreshold;
@@ -31,22 +42,25 @@ class IsTrueValidatorV3 extends ConstraintValidator
     /**
      * ContainsRecaptchaValidator constructor.
      *
-     * @param bool            $enabled
-     * @param float           $scoreThreshold
-     * @param ReCaptcha       $scoreThreshold
-     * @param RequestStack    $requestStack
-     * @param LoggerInterface $logger
+     * @param bool                   $enabled
+     * @param string                 $secret
+     * @param float                  $scoreThreshold
+     * @param RequestStack           $requestStack
+     * @param LoggerInterface        $logger
+     * @param ReCaptchaRequestMethod $reCaptchaRequestMethod
      */
     public function __construct(
         bool $enabled,
+        string $secret,
         float $scoreThreshold,
-        ReCaptcha $reCaptcha,
         RequestStack $requestStack,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ?ReCaptchaRequestMethod $reCaptchaRequestMethod = null
     ) {
         $this->enabled = $enabled;
+        $this->secret = $secret;
+        $this->reCaptchaRequestMethod = $reCaptchaRequestMethod;
         $this->scoreThreshold = $scoreThreshold;
-        $this->reCaptcha = $reCaptcha;
         $this->requestStack = $requestStack;
         $this->logger = $logger;
     }
@@ -72,6 +86,7 @@ class IsTrueValidatorV3 extends ConstraintValidator
         if (!is_string($value)) {
             throw new UnexpectedTypeException($value, 'string');
         }
+        $this->secret  = $constraint->secret ?: $this->secret;
 
         if (!$this->isTokenValid($value)) {
             $this->context->buildViolation($constraint->message)
@@ -88,6 +103,8 @@ class IsTrueValidatorV3 extends ConstraintValidator
     private function isTokenValid(string $token): bool
     {
         try {
+            $this->recaptcha  = new ReCaptcha($this->secret, $this->reCaptchaRequestMethod);
+
             $remoteIp = $this->requestStack->getCurrentRequest()->getClientIp();
             $action = $this->getActionName();
 

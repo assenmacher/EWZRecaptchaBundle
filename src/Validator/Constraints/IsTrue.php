@@ -15,6 +15,20 @@ class IsTrue extends Constraint
 
     public $invalidHostMessage = 'The captcha was not resolved on the right domain.';
 
+    /**
+     * if you like to overwrite bundle config -> new EWZ\Bundle\RecaptchaBundle\Validator\Constraints\IsTrue(['sitekey' => '12345'])
+     *
+     * @var string
+     */
+    public $public_key = null;
+
+    /**
+     * if you like to overwrite bundle config -> new EWZ\Bundle\RecaptchaBundle\Validator\Constraints\IsTrue(['secret' => 'abcdef'])
+     *
+     * @var string
+     */
+    public $secret = null;
+
     public function __construct(array $options = null, string $message = null, string $invalidHostMessage = null, array $groups = null, $payload = null)
     {
         parent::__construct($options ?? [], $groups, $payload);
