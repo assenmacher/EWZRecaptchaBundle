@@ -3,6 +3,7 @@
 namespace EWZ\Bundle\RecaptchaBundle\Validator\Constraints;
 
 use ReCaptcha\ReCaptcha;
+use ReCaptcha\RequestMethod as ReCaptchaRequestMethod;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -17,6 +18,16 @@ class IsTrueValidator extends ConstraintValidator
      * @var bool
      */
     protected $enabled;
+
+    /**
+     * @var string
+     */
+    private $secret;
+
+    /**
+     * @var ReCaptchaRequestMethod
+     */
+    private $reCaptchaRequestMethod;
 
     /**
      * Recaptcha.
@@ -55,22 +66,25 @@ class IsTrueValidator extends ConstraintValidator
 
     /**
      * @param bool                               $enabled
-     * @param ReCaptcha                          $recaptcha
+     * @param string                             $secret
      * @param RequestStack                       $requestStack
      * @param bool                               $verifyHost
+     * @param ReCaptchaRequestMethod             $reCaptchaRequestMethod
      * @param AuthorizationCheckerInterface|null $authorizationChecker
      * @param array                              $trustedRoles
      */
     public function __construct(
         bool $enabled,
-        ReCaptcha $recaptcha,
+        string $secret,
         RequestStack $requestStack,
         bool $verifyHost,
+        ?ReCaptchaRequestMethod $reCaptchaRequestMethod = null,
         ?AuthorizationCheckerInterface $authorizationChecker = null,
         array $trustedRoles = array())
     {
         $this->enabled = $enabled;
-        $this->recaptcha = $recaptcha;
+        $this->secret = $secret;
+        $this->reCaptchaRequestMethod = $reCaptchaRequestMethod;
         $this->requestStack = $requestStack;
         $this->verifyHost = $verifyHost;
         $this->authorizationChecker = $authorizationChecker;
@@ -93,6 +107,8 @@ class IsTrueValidator extends ConstraintValidator
             && $this->authorizationChecker->isGranted($this->trustedRoles)) {
             return;
         }
+        $this->secret  = $constraint->secret ?: $this->secret;
+        $this->recaptcha  = new ReCaptcha($this->secret, $this->reCaptchaRequestMethod);
 
         if (\is_callable([$this->requestStack, 'getMainRequest'])) {
             $request = $this->requestStack->getMainRequest();   // symfony 5.3+

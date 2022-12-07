@@ -24,20 +24,14 @@ services:
         public: true
         arguments:
             - '%ewz_recaptcha.enabled%'
-            - '@ewz_recaptcha.recaptcha'
+            - '%ewz_recaptcha.private_key%'
             - '@request_stack'
             - '%ewz_recaptcha.verify_host%'
+            - '@ewz_recaptcha.extension.recaptcha.request_method.post'
             - '@?security.authorization_checker'
             - '%ewz_recaptcha.trusted_roles%'
         tags:
             - { name: validator.constraint_validator, alias: 'ewz_recaptcha.true' }
-
-    ewz_recaptcha.recaptcha:
-        class: ReCaptcha\ReCaptcha
-        public: false
-        arguments:
-            - '%ewz_recaptcha.private_key%'
-            - '@ewz_recaptcha.extension.recaptcha.request_method.post'
 
     ewz_recaptcha.extension.recaptcha.request_method.post:
         class: EWZ\Bundle\RecaptchaBundle\Extension\ReCaptcha\RequestMethod\Post
@@ -70,10 +64,11 @@ services:
         public: true
         arguments:
             - '%ewz_recaptcha.enabled%'
+            - '%ewz_recaptcha.private_key%'
             - '%ewz_recaptcha.score_threshold%'
-            - '@ewz_recaptcha.recaptcha'
             - '@request_stack'
             - '@logger'
+            - '@ewz_recaptcha.extension.recaptcha.request_method.post'
         tags:
             - { name: validator.constraint_validator, alias: 'ewz_recaptcha.v3.true' }
 

@@ -58,7 +58,7 @@ abstract class AbstractEWZRecaptchaType extends AbstractType
             'ewz_recaptcha_enabled' => $this->enabled,
             'ewz_recaptcha_api_host' => $this->apiHost,
             'ewz_recaptcha_api_uri' => $this->recaptchaApiServer,
-            'public_key' => $this->publicKey,
+            'public_key' => $options['public_key'] ?? $this->getPublicKey(),
         ));
 
         if (!$this->enabled) {
